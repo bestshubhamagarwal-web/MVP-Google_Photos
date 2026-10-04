@@ -1,6 +1,5 @@
 import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { pipeline } from '@xenova/transformers';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -79,14 +78,14 @@ app.get('/api/photos', (req, res) => {
     res.json(embeddings); // fallback
   }
 });
-app.use('/media', express.static(path.join(__dirname, 'data/photos'), {
-  setHeaders: (res, path) => {
-    // The dummy generator saves SVGs as .jpg files
-    if (path.endsWith('.jpg')) {
-      res.setHeader('Content-Type', 'image/svg+xml');
-    }
-  }
-}));
+app.get('/media/:filename', (req, res) => {
+  const filename = req.params.filename;
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.send(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+    <rect width="100%" height="100%" fill="#eee"/>
+    <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#333" dominant-baseline="middle" text-anchor="middle">${filename}</text>
+  </svg>`);
+});
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
