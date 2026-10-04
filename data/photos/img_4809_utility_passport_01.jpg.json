@@ -1,0 +1,26 @@
+{
+  "title": "img_4809_utility_passport_01.jpg",
+  "description": "Open Indian passport document front page",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1643552354,
+    "formatted": "2026-10-03T16:26:12.447Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_4809_utility_passport_01.jpg",
+  "category": "Utility",
+  "target": "target_passport"
+}

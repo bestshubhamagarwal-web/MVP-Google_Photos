@@ -1,0 +1,26 @@
+{
+  "title": "img_2213_food_pizza_01.jpg",
+  "description": "A delicious pepperoni pizza on a wooden table",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1672074181,
+    "formatted": "2026-10-03T16:26:05.482Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_2213_food_pizza_01.jpg",
+  "category": "Food",
+  "target": null
+}

@@ -1,0 +1,26 @@
+{
+  "title": "img_0345_people_group_01.jpg",
+  "description": "Group of friends laughing in a park",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1581076675,
+    "formatted": "2026-10-04T06:31:55.447Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_0345_people_group_01.jpg",
+  "category": "People",
+  "target": null
+}

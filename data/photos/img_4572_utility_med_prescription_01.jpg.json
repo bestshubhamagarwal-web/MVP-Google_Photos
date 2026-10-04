@@ -1,0 +1,26 @@
+{
+  "title": "img_4572_utility_med_prescription_01.jpg",
+  "description": "Doctor prescription document for fever and cold",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1672938635,
+    "formatted": "2026-10-03T16:26:11.892Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_4572_utility_med_prescription_01.jpg",
+  "category": "Utility",
+  "target": "target_prescription"
+}

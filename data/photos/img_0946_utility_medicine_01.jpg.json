@@ -1,0 +1,26 @@
+{
+  "title": "img_0946_utility_medicine_01.jpg",
+  "description": "A strip of paracetamol medicine tablets",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1656241606,
+    "formatted": "2026-10-03T13:31:32.804Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_0946_utility_medicine_01.jpg",
+  "category": "Utility",
+  "target": "target_medicine"
+}

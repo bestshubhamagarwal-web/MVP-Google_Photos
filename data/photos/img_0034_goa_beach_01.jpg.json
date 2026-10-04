@@ -1,0 +1,26 @@
+{
+  "title": "img_0034_goa_beach_01.jpg",
+  "description": "Sunny day at Baga Beach, Goa with friends",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1587358165,
+    "formatted": "2026-10-04T06:31:55.206Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_0034_goa_beach_01.jpg",
+  "category": "Travel",
+  "target": null
+}

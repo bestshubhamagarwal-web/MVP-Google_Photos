@@ -1,0 +1,19 @@
+[
+  { "id": "goa_beach_01", "category": "Travel", "description": "Sunny day at Baga Beach, Goa with friends", "target": null },
+  { "id": "goa_shack_01", "category": "Travel", "description": "Seafood at a beach shack in Goa", "target": null },
+  { "id": "goa_party_01", "category": "Travel", "description": "Night party at Tito's Lane, Goa", "target": null },
+  { "id": "food_pizza_01", "category": "Food", "description": "A delicious pepperoni pizza on a wooden table", "target": null },
+  { "id": "food_cafe_01", "category": "Food", "description": "Coffee and croissants at a local cafe", "target": "target_cafe" },
+  { "id": "people_group_01", "category": "People", "description": "Group of friends laughing in a park", "target": null },
+  { "id": "people_portrait_01", "category": "People", "description": "Portrait of a friend looking away", "target": null },
+  { "id": "everyday_home_01", "category": "Everyday", "description": "Messy desk with a laptop and coffee mug", "target": null },
+  { "id": "everyday_pet_01", "category": "Everyday", "description": "Golden retriever sleeping on a rug", "target": null },
+  { "id": "utility_receipt_01", "category": "Utility", "description": "Supermarket grocery receipt", "target": null },
+  { "id": "utility_medicine_01", "category": "Utility", "description": "A strip of paracetamol medicine tablets", "target": "target_medicine" },
+  { "id": "travel_mountains_01", "category": "Travel", "description": "Snow capped mountains in Manali", "target": null },
+  { "id": "utility_med_bill_01", "category": "Utility", "description": "Pharmacy medicine bill screenshot with apollo pharmacy logo", "target": "target_med_bill" },
+  { "id": "utility_med_bottle_01", "category": "Utility", "description": "Cough syrup medicine bottle on a table", "target": "target_med_bottle" },
+  { "id": "utility_document_01", "category": "Utility", "description": "Picture of Aadhar card identity document", "target": "target_document" },
+  { "id": "utility_passport_01", "category": "Utility", "description": "Open Indian passport document front page", "target": "target_passport" },
+  { "id": "utility_med_prescription_01", "category": "Utility", "description": "Doctor prescription document for fever and cold", "target": "target_prescription" }
+]

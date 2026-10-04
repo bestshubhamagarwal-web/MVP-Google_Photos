@@ -1,0 +1,26 @@
+{
+  "title": "img_4771_travel_mountains_01.jpg",
+  "description": "Snow capped mountains in Manali",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1621785456,
+    "formatted": "2026-10-03T16:26:12.392Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_4771_travel_mountains_01.jpg",
+  "category": "Travel",
+  "target": null
+}

@@ -1,0 +1,26 @@
+{
+  "title": "img_2287_utility_receipt_01.jpg",
+  "description": "Supermarket grocery receipt",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1553562593,
+    "formatted": "2026-10-03T16:26:05.735Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_2287_utility_receipt_01.jpg",
+  "category": "Utility",
+  "target": null
+}

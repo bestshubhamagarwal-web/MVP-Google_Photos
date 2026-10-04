@@ -1,0 +1,26 @@
+{
+  "title": "img_0293_food_cafe_01.jpg",
+  "description": "Coffee and croissants at a local cafe",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1640679361,
+    "formatted": "2026-10-04T06:31:55.406Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_0293_food_cafe_01.jpg",
+  "category": "Food",
+  "target": "target_cafe"
+}

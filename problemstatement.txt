@@ -1,0 +1,526 @@
+================================================================================
+PROBLEM STATEMENT & MVP BUILD SPEC  (v2)
+"Recall Photos" - a Google Photos-style web app with "Ask Photos" AI search
+and "Help Me Remember" guided recall
+================================================================================
+
+HOW TO USE THIS FILE (for the coding agent)
+- Read the whole file before writing code.
+- Build in the phase order in section 16. After each phase, stop, summarise
+  what works, and tell me exactly how to test it.
+- Ask me before changing any tech choice, unless something is broken.
+- The product thinking behind this MVP is in the attached PRD
+  (Help_Me_Remember_PRD.docx). This file is the build spec; where they
+  differ, follow this file.
+
+--------------------------------------------------------------------------------
+1. PRODUCT SUMMARY
+--------------------------------------------------------------------------------
+A local web app that looks and feels like Google Photos on the web
+(https://photos.google.com/), loaded with 2,500 low-resolution dummy
+photos with realistic metadata. It has:
+  1. A familiar photo library: date-grouped grid, viewer, albums,
+     favourites, explore page.
+  2. A search bar with an "Ask Photos" toggle, like the Google Photos app:
+       - Toggle OFF = classic keyword search.
+       - Toggle ON  = AI search: ask in natural language, get an answer
+         plus matching photos, with follow-up turns.
+  3. "Help Me Remember": when a search is struggling, the app asks 3-4
+     tappable memory questions, shows a live counter of photos narrowing,
+     offers look-alike groups to pick from, and a "near-miss jump" to the
+     timeline - until the user recognises the photo.
+
+The MVP must prove: users find a vaguely remembered photo faster and more
+often with Help Me Remember than with search alone.
+
+--------------------------------------------------------------------------------
+2. THE PROBLEM (from the PRD)
+--------------------------------------------------------------------------------
+Users with large libraries remember that a photo exists but can't describe
+it precisely. Examples:
+  - "That small cafe we went to during our Goa trip."
+  - "The picture of the medicine I took when I was sick last year."
+
+Search and filters ask for facts people DON'T remember: exact dates, place
+names, album names, exact keywords. People DO remember fuzzy cues:
+  - WHO was there            - WHAT was in the photo
+  - THE SETTING              - ROUGH LIGHT (daylight / evening)
+  - RELATIVE TIME ("before my Goa trip", "around Diwali")
+  - OCCASION (special vs ordinary day)
+And they RECOGNISE the right photo instantly when they see it.
+
+Core insight: retrieval should rely on recognition and fuzzy memory cues,
+not precise recall.
+
+--------------------------------------------------------------------------------
+3. GOALS & METRICS (instrumented in the MVP, see section 12)
+--------------------------------------------------------------------------------
+North star: Vague-query success rate = share of struggling search sessions
+  that end with the user marking "This is it!", opening for 3s+, favouriting,
+  or downloading a photo.
+Efficiency: time to find, reformulations per success, taps per success.
+Feature health: question answer vs skip rate, checkpoint pick rate,
+  near-miss jump usage, Ask Photos follow-up rate.
+Guardrails: nudge dismissal rate; time to find for precise searches must
+  not get worse.
+"Struggling" search = 2+ reformulations in 3 minutes with no photo opened,
+  OR scrolling past 60 results without opening any, OR vague phrasing
+  ("that time", "last year", "the one", "remember", "when we", "that day").
+
+--------------------------------------------------------------------------------
+4. TECH STACK
+--------------------------------------------------------------------------------
+- Frontend: React + Vite + TypeScript + Tailwind CSS.
+  - Icons: Material Symbols (Outlined) from Google Fonts (open licence).
+  - Font: Roboto (Google Fonts) with system-ui fallback.
+  - Grid layout: "justified-layout" (npm) for Google Photos-style rows.
+  - Virtualisation: @tanstack/react-virtual (grid must stay smooth at
+    2,500+ photos).
+  - State: Zustand. Routing: React Router.
+- Backend: Node.js + Express (serves images, index, AI endpoints, logs;
+  holds API keys - never expose keys to the browser).
+- AI:
+  - Gemini API for photo tagging, Ask Photos query understanding and
+    answers. Model names in .env: GEMINI_TAG_MODEL, GEMINI_CHAT_MODEL
+    (use current Gemini Flash / Flash-Lite multimodal models).
+  - CLIP via @xenova/transformers, run locally in Node:
+      image embeddings (look-alike groups, "More like this") and
+      text embeddings (semantic search in Ask Photos).
+  - Optional face grouping: @vladmandic/face-api (local).
+- Images: sharp (resize, thumbnails). EXIF: exifr.
+- Dummy photos: generated in-project (section 5) with an AI image model
+  (GEMINI_IMAGE_MODEL) plus sharp/SVG templates; no external image links.
+- Storage: JSON files in /data (no database).
+- Runs on localhost, single user, no login.
+
+.env keys: GEMINI_API_KEY, GEMINI_TAG_MODEL, GEMINI_CHAT_MODEL,
+           GEMINI_IMAGE_MODEL, HOME_CITY=Lucknow, HOME_LAT=26.85,
+           HOME_LNG=80.95
+
+--------------------------------------------------------------------------------
+5. DATA: 2,500 GENERATED LOW-RESOLUTION DUMMY PHOTOS
+--------------------------------------------------------------------------------
+All photos are GENERATED inside the project by code. Nothing is downloaded
+from external image links or stock sites. Because we generate every photo,
+we also know its ground truth (what is in it), which makes testing easy.
+
+5.1 Approach: hybrid generation  (`npm run generate`)
+  Step 1 - Scene manifest
+    Write /scripts/scenes.json with ~250 BASE SCENES covering the mix in
+    5.3. Each entry:
+      { "scene_id", "category", "prompt", "variants": n,
+        "event_group": "id of scenes shot at the same time/place or null",
+        "truth": { photo_type, setting, place_type, light, people_count,
+                   occasion, objects[], caption, text_in_image } }
+    The agent writes this manifest itself; prompts must be varied
+    (different angles, colours, crowd sizes, times of day).
+  Step 2 - Base images with an AI image model
+    Generate each base scene once via an image-generation API
+    (GEMINI_IMAGE_MODEL in .env = a current Gemini image generation
+    model). If the IDE has its own built-in image generation tool, it may
+    use that instead and save to the same paths.
+    - Output ~640px, then save as JPEG.
+    - Append to every prompt: "casual smartphone photo, natural lighting,
+      slightly imperfect framing, realistic, no text overlay, no
+      watermark, no logos".
+    - People in images must be fictional; no celebrities, no brand logos.
+    - Concurrency 2, retry with backoff, resumable (skip existing files),
+      progress bar with ETA. Save to /data/photos/generated/base/.
+  Step 3 - Variants to reach exactly 2,500
+    Real libraries are full of near-duplicate shots, so create variants
+    of each base image with sharp:
+      random crop 75-95%, slight zoom, horizontal flip, rotation +/-3deg,
+      brightness/contrast +/-12%, warm/cool white-balance shift,
+      mild blur (1 in 10, "motion shot"), mild noise, JPEG quality 60-75.
+    Variants inherit the base scene's truth tags. Average ~9 variants per
+    base scene (more for common categories, 0 for demo targets).
+    Save to /data/photos/generated/<category>/<scene_id>_v<k>.jpg
+  Step 4 - Utility photos rendered from templates (no AI needed)
+    Medicine strips, pill bottles labels, prescriptions, receipts/bills,
+    phone screenshots, whiteboard notes, parking signs: render from
+    HTML/SVG templates with fictional text (e.g. "Paracetamol 500 mg",
+    "Dr. A. Sharma Clinic", restaurant bills with totals), then make them
+    look photographed: perspective skew, table-top background, soft
+    shadow, slight blur and noise. text_in_image = the rendered text.
+
+5.2 Fallback: fully procedural mode  (`npm run generate -- --procedural`)
+  No AI, free and fast; use during development until AI images are ready.
+  Draw each category with SVG scene templates (e.g. beach = sky gradient +
+  sea band + sand + sun/sunset colours; cafe = wall colour, table, cups,
+  plants; mountains = layered peaks + snow caps; party = balloons,
+  cake; people = simple silhouettes, count matching people_count), add
+  photographic noise/vignette, export at 640px. Same manifest, same truth
+  tags, same file paths, so the rest of the app does not change.
+
+5.3 Composition (exactly 2,500 final photos; counts in /scripts/scenes.json)
+  Mix chosen so keyword search alone is genuinely hard:
+
+  GOA TRIP SCENARIO + DECOYS (310)
+    goa beach 60 | beach sunset 40 | small cafe interior 40 |
+    cafe breakfast table 30 | coffee and cake 30 | friends at cafe 30 |
+    beach shack restaurant 40 | hotel breakfast buffet 40
+  OTHER TRIPS (310)
+    himalayan mountains 80 | snow trip 40 | jaipur-style fort 60 |
+    rajasthan street 40 | kerala backwaters 60 | houseboat 30
+  FOOD & EATING OUT (320)
+    indian street food 80 | restaurant dinner 70 | home cooked indian food 60 |
+    dessert 40 | coffee shop exterior 30 | cafe at night 40
+  PEOPLE & EVENTS (470)
+    birthday party 80 | indian wedding 80 | family dinner 60 |
+    friends selfie 70 | diwali celebration 60 | holi festival 50 |
+    graduation 30 | concert crowd 40
+  EVERYDAY LIFE (450)
+    indian city street 80 | home interior 50 | pet dog 60 | cat 40 |
+    office desk 50 | traffic and cars 40 | park 50 | sunset sky 40 |
+    flowers 40
+  UTILITY PHOTOS (270)  <- mostly from Step 4 templates
+    medicine tablet strip 40 | pill bottle 30 | prescription 20 |
+    clinic/hospital 20 | receipt or bill 40 | document on table 30 |
+    phone screenshot 40 | parking sign 20 | whiteboard notes 30
+  TRAVEL & NATURE (370)
+    nature landscape 80 | monsoon rain 50 | lake or river 40 |
+    indian temple 60 | airport 50 | train journey 40 | hotel room 50
+
+  Optional: /data/photos/own/ for my real photos (kept as-is, real EXIF).
+  These are the only photos where face grouping will meaningfully work.
+
+5.4 Low resolution
+  - Final images: longest edge 640px, JPEG quality 60-75, no EXIF.
+    Target ~40-70 KB each (~150 MB total).
+  - Thumbnails: 256px, quality 60, in /data/thumbs/.
+  - Grid uses thumbs; viewer uses the 640px image.
+
+5.5 Demo targets (defined in the manifest, unique base scenes, 0 variants)
+  - target_cafe: a small, cosy cafe interior with food on the table,
+    daylight, 2-3 people partly visible. Plus 3 "same morning" companions:
+    coffee and cake close-up, friends at the cafe, Goa beach.
+  - target_medicine: a tablet strip on a bedside table, evening light,
+    plus companions: prescription, clinic waiting room, pill bottle.
+  - Also generate 5+ decoys per target (other cafes in daylight, beach
+    shacks, other medicine photos) so they are not trivially unique.
+  - Write their ids to /data/demo_targets.json.
+
+5.6 Demo seed script  (`npm run seed`)
+  Generated photos have no dates or GPS. Write realistic fake metadata as
+  Takeout-style JSON sidecars next to each image (<file>.json with
+  photoTakenTime.timestamp and geoData) so the indexer reads them like a
+  real Google Takeout export. Mark records "synthetic": true. Fixed random
+  seed (reproducible). Never touch real data in /data/photos/own/.
+
+  - Timeline: spread photos over the last 8 years, clustered realistically
+    (weekends, festivals, trips; fewer on weekdays). Variants of the same
+    base scene get timestamps seconds-to-minutes apart, like bursts.
+  - Home: HOME_CITY coordinates +/- 10 km for everyday photos.
+  - Festivals: diwali/holi photos land on the real festival dates of each
+    year (hardcode dates for the 8 years).
+  - Trips (each with date range + GPS):
+      Goa (4 days, ~2 years ago) <- goa beach, beach sunset, beach shack,
+        hotel buffet and SOME cafe photos
+      Manali (mountains, snow), Jaipur (fort, rajasthan street),
+      Kerala (backwaters, houseboat), plus 2 weekend trips.
+    Scatter remaining cafe/food photos across other dates and cities, so
+    "cafe" or "goa" alone never isolates the target.
+  - target_cafe + companions: SAME Goa morning, 09:30-10:30, 3-8 min apart.
+  - target_medicine + companions: a "sick week" ~11-13 months ago, evening
+    times, home GPS. Other medicine photos scattered across other years.
+  - Time of day follows the truth "light" tag (daylight 08:00-17:00,
+    evening_night 18:30-23:00).
+  - Realism: ~20% of photos get no GPS; ~10% get date_confidence "low".
+  - Print a summary: photos per category, per year, per trip.
+
+--------------------------------------------------------------------------------
+6. INDEXING  (`npm run index`)
+--------------------------------------------------------------------------------
+Output /data/index.json, one record per photo:
+{
+  "id", "file", "thumb", "width", "height",
+  "taken_at", "date_confidence": "high|low", "lat", "lng",
+  "place_name": "nearest city (offline reverse geocode)",
+  "trip_id": "string|null", "synthetic": bool,
+  "source": "generated|own", "scene_id": "string|null", "favourite": false, "archived": false,
+  "face_cluster_ids": [],
+  "tags": {
+    "photo_type": "people|food|place|object|screenshot|document|pet|other",
+    "setting": "indoors|outdoors|unknown",
+    "place_type": "beach|restaurant_cafe|home|street|nature|hotel|office|
+                   hospital_clinic|vehicle|temple|other",
+    "light": "daylight|evening_night|unknown",
+    "people_count": "0|1|2-3|4+",
+    "occasion": "special|ordinary|unknown",
+    "objects": ["<= 8 nouns"],
+    "text_in_image": "short OCR summary or empty",
+    "caption": "one plain sentence"
+  },
+  "img_embedding": [CLIP floats]  -> store separately in
+                                     /data/embeddings.bin + id map
+}
+Rules:
+- Tags: generated photos take their tags from the manifest truth by
+  default (no API calls). Flag --vision re-tags them with Gemini from the
+  256px thumbnail to simulate real, imperfect AI labels; store both
+  ("tags" = what the app uses, "truth" = ground truth for metrics).
+  Recommended for realistic demos: run with --vision.
+  Own photos are always tagged with Gemini.
+  Gemini tagging: batch 8 thumbnails per request, JSON array in the same
+  order, only allowed enum values, strip code fences, validate, retry once,
+  else "unknown".
+- Concurrency 3, retry with exponential backoff, save progress every 40
+  photos, fully resumable. Show a progress bar with ETA.
+- Compute CLIP image embeddings locally for all photos.
+- Life anchors -> /data/anchors.json: detect trips (runs of 5+ photos within
+  1-6 days, 100 km+ from home), festivals per year, and allow manual edits
+  in Settings.
+- Face grouping (optional flag --faces): run only on /data/photos/own/;
+  clusters with 3+ photos; crops to /data/faces/; names in
+  /data/people.json via a "Name your people" screen.
+
+--------------------------------------------------------------------------------
+7. FRONTEND: GOOGLE PHOTOS-STYLE UI
+--------------------------------------------------------------------------------
+Match the layout, spacing and interaction patterns of Google Photos on the
+web. Use our own product name ("Recall Photos") and a simple own logo -
+do NOT use Google's logo, name or brand assets.
+
+7.1 App shell
+  - Top app bar (64px, white, subtle bottom shadow on scroll):
+      left: hamburger (collapses nav) + logo + "Recall Photos"
+      centre: large rounded search bar (pill, light grey fill #F1F3F4,
+        ~720px max width) with search icon, placeholder
+        "Search your photos and albums", and the ASK PHOTOS TOGGLE inside
+        the right end of the bar (see section 9)
+      right: upload icon (disabled in MVP), help, settings, avatar circle
+  - Left navigation drawer (256px, collapsible to icons):
+      Photos, Explore, Help me remember, Favourites, Albums, Documents &
+      utilities, Archive, Trash, divider, Metrics (demo), Settings.
+      Active item: light blue pill background (#E8F0FE), blue text/icon.
+  - Light theme by default; dark theme toggle in Settings.
+  - Responsive: on mobile widths the drawer becomes a bottom nav
+    (Photos, Search, Library) and the search bar becomes full-width.
+
+7.2 Photos (home)
+  - Justified grid (rows of varying photo widths keeping aspect ratio,
+    target row height ~200px desktop / ~110px mobile, 4px gaps).
+  - Grouped by day with headers like "Sat, 12 Mar 2024" and a place name
+    when known ("Goa"). Month/year headers when zoomed out.
+  - Hover: grey checkmark circle top-left; click it to multi-select;
+    selection bar appears at top (count, favourite, add to album, archive).
+  - Right edge date scrubber showing years; drag to jump through time.
+  - Lazy-load thumbs with a grey placeholder and fade-in.
+
+7.3 Photo viewer (full screen, black background)
+  - Left/right arrows and keyboard nav; Esc closes.
+  - Top-right actions: share (disabled), info (i), favourite (star),
+    delete (to Trash), more (add to album, download, "It was around this
+    moment", "More like this").
+  - Info side panel (360px): date & time, place name + coordinates,
+    AI caption, tags as chips, people, and a "generated photo" badge for
+    synthetic photos.
+  - "This is it!" button appears whenever the viewer was opened from a
+    search or Help Me Remember session.
+
+7.4 Explore
+  - Rows like Google Photos: People (face clusters, if any), Places (city
+    cards with cover photo), Things (top tags: food, beach, temple,
+    documents...), Trips (auto-detected), Festivals.
+  - Clicking any card runs a search for it.
+
+7.5 Albums, Favourites, Documents & utilities, Archive, Trash
+  - Albums: grid of album cards; create album, add from selection.
+  - Documents & utilities: photos tagged document/screenshot/receipt/
+    medicine (the "utility memories" from the PRD).
+
+--------------------------------------------------------------------------------
+8. SEARCH - CLASSIC MODE (Ask Photos toggle OFF)
+--------------------------------------------------------------------------------
+- Typing shows a suggestions dropdown (people, places, things, trips).
+- Results page: header "Results for <query>" + count + justified grid.
+- Matching (deliberately simple, represents "today's search"): keyword
+  match on caption, objects, place_type, photo_type, place_name, trip
+  name, text_in_image, people names; plus month/year if typed.
+- Struggle detection (section 3) shows a banner card at the top of results:
+  "Can't find it? Help me remember" [Start] [Dismiss].
+
+--------------------------------------------------------------------------------
+9. "ASK PHOTOS" TOGGLE - AI SEARCH MODE
+--------------------------------------------------------------------------------
+9.1 Toggle
+  - A switch inside the search bar labelled "Ask" with a sparkle icon,
+    similar to the Ask Photos toggle in the Google Photos app. State saved
+    in localStorage. When ON: the bar border gets a soft blue/purple
+    gradient, placeholder changes to "Ask anything about your photos",
+    and pressing Enter opens the Ask panel instead of the results page.
+
+9.2 Ask panel (conversation view)
+  - Full-width panel below the top bar. Each turn shows: user question;
+    an AI answer (1-3 sentences); a horizontal strip or grid of matching
+    photos (up to 24); and suggested follow-up chips.
+  - Follow-up questions keep context ("only the ones from the evening",
+    "what was the name of that cafe?").
+  - Each answer cites which photos it used; tapping a photo opens the
+    viewer.
+
+9.3 Backend pipeline (POST /api/ask)
+  1. Query understanding (Gemini, JSON only): extract
+       { semantic_text, people, place_types, photo_types, light, setting,
+         time: {absolute range | relative anchor like "before goa trip" |
+         "last year"}, occasion, intent: "find|count|when|where|summarise" }
+     using today's date, the anchors list and people names as context.
+  2. Candidate retrieval: CLIP text embedding of semantic_text vs image
+     embeddings (top 300) + soft tag scoring from the extracted fields +
+     time anchor boost. Never hard-filter (see 10.3).
+  3. Re-rank: send the top 40 candidates' captions + tags + dates (text
+     only, cheap) to Gemini; get back ordered ids + a short answer.
+  4. Confidence check: if the top results are spread out (many similar
+     scores, or > 60 strong matches), the answer says so and the panel
+     shows Help Me Remember question chips inline, e.g.
+       "I found 240 possible photos. Who was with you?" [face/people chips]
+     Answering continues the narrowing inside the same conversation.
+  5. Log every step (section 12).
+  - Response time target: under 4 seconds. Show a shimmer loading state.
+
+--------------------------------------------------------------------------------
+10. HELP ME REMEMBER - GUIDED RECALL (works in both modes)
+--------------------------------------------------------------------------------
+Entry points: struggle banner (classic), inline chips (Ask mode), and the
+"Help me remember" item in the left nav (starts from the whole library).
+
+10.1 Layout
+  - Question card on top, live counter beside it (big number with trail:
+    "2,500 -> 640 -> 230 -> 85"), answer chips row, re-sorted justified
+    grid below.
+
+10.2 Question bank (all answered by tapping; each has "Not sure" + "Skip")
+  Q_WHO      "Who was there?"  -> face clusters if available, otherwise
+                                  "Just me / 2-3 people / A group / No one"
+  Q_TYPE     "What was in the photo?" -> photo_type options
+  Q_PLACE    "Where were you?"  -> place_types present in the set
+  Q_SETTING  "Indoors or outdoors?"
+  Q_LIGHT    "Daylight or evening?"
+  Q_WHEN     "Before or after <anchor>?" -> anchor that best splits the set
+  Q_OCCASION "Special occasion or an ordinary day?"
+  Show a one-line hint under each question, e.g.
+  "This splits your 230 photos roughly in half."
+
+10.3 Rules (important)
+  - Adaptive: ask the unasked question with the highest Shannon entropy
+    over the current strong matches (ignore "unknown"); never ask one
+    where a single value covers > 85%. Max 4 questions.
+  - Soft scoring, never hard filtering: score = matched answers (1 each,
+    "unknown" 0.3). Grid sorted by score, then date. Strong matches = match
+    all answers except at most one; the counter shows strong matches.
+  - Every answer is a removable chip; removing recomputes instantly.
+
+10.4 Recognition checkpoint ("look-alike groups")
+  - Trigger: strong matches <= 120, OR 4 questions answered, OR best next
+    question entropy < 0.6 bits.
+  - k-means on CLIP embeddings of strong matches (k=4; k=3 if < 30).
+  - 4 group cards, each a 2x2 mosaic of its most central photos, labelled
+    with its most common place_type/photo_type ("Small cafe",
+    "Beach shack"). Prompt "Does it look closer to one of these?" +
+    "None of these". Tapping boosts that group and updates the counter.
+
+10.5 Near-miss jump
+  - In viewer and on grid hover: "It was around this moment" -> timeline
+    strip of the same day (+/- 12h if sparse), sorted by time, scrolled to
+    and highlighting this photo. "More like this" -> 30 nearest by CLIP.
+
+10.6 Success
+  - "This is it!" -> success panel: taps used, time taken, narrowed from
+    X to 1; buttons "Favourite" and "Add to album".
+
+--------------------------------------------------------------------------------
+11. DEMO SCENARIOS THE MVP MUST HANDLE
+--------------------------------------------------------------------------------
+A) GOA CAFE (classic mode)
+  1. Search "cafe goa" -> many mixed results; scroll without opening.
+  2. Banner appears -> Start Help me remember.
+  3. Who was there? -> "2-3 people".  4. Daylight or evening? -> Daylight.
+  5. What was in the photo? -> Food.  6. Checkpoint -> "Small cafe".
+  7. See a same-morning photo -> "It was around this moment".
+  8. target_cafe appears nearby -> "This is it!". Under 60 seconds.
+B) MEDICINE (Ask Photos mode)
+  1. Toggle Ask ON. Ask "the medicine I took when I was sick last year".
+  2. Answer + photos; if many candidates, inline chips ask e.g.
+     "Tablet strip, bottle or prescription?" / "Before or after <anchor>?"
+  3. target_medicine found within 2 follow-ups -> "This is it!".
+/metrics must show both runs with time, taps and success.
+
+--------------------------------------------------------------------------------
+12. METRICS, LOGGING & A/B MODE
+--------------------------------------------------------------------------------
+- Log events to /data/events.jsonl (timestamp, session_id, mode):
+  search_query, results_shown, scroll_depth, photo_opened, trigger_shown,
+  trigger_dismissed, recall_started, question_asked, question_answered,
+  question_skipped, chip_removed, checkpoint_shown, group_picked,
+  near_miss_used, more_like_this_used, ask_query, ask_followup,
+  ask_inline_chip, found, abandoned.
+- /metrics dashboard comparing: Classic search only | Classic + Help me
+  remember | Ask Photos | Ask Photos + inline chips:
+  success rate, median time to find, median taps/reformulations, question
+  answer rate, checkpoint pick rate, near-miss share of successes.
+- Settings: "A/B mode" switch that hides Help Me Remember entirely, plus a
+  "Test task" mode: shows a target photo for 5 seconds, hides it, then
+  asks the tester to find it (records the session as a test run). This is
+  how I'll test with friends.
+- "Reset demo data" button (clears events, favourites, albums).
+
+--------------------------------------------------------------------------------
+13. DESIGN TOKENS
+--------------------------------------------------------------------------------
+- Colours: background #FFFFFF, surface #F1F3F4, text #202124,
+  secondary text #5F6368, accent #1A73E8, active nav #E8F0FE,
+  dividers #DADCE0. Ask mode gradient: #4285F4 -> #A142F4 (subtle).
+- Radius: search bar 24px, cards 12px, photos 0-4px.
+- Motion: 150-200ms ease for hovers, counter number animates on change.
+- Tap targets >= 40px. Keyboard accessible; alt text = AI caption.
+
+--------------------------------------------------------------------------------
+14. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------------------
+[ ] Clean clone + .env keys: `npm install` then `npm run demo:setup`
+    (generate -> seed -> index) then `npm run dev` works.
+    `npm run demo:setup -- --procedural` works with NO API keys at all.
+[ ] Exactly 2,500 generated low-res photos (<= 640px) + thumbs; no
+    external image downloads; total data under ~250 MB; generation and
+    indexing are resumable and respect API rate limits.
+[ ] Every generated photo has ground-truth tags; /metrics can report how
+    often vision tags disagree with truth (when --vision is used).
+[ ] UI matches Google Photos web layout (top bar, pill search, left nav,
+    justified date-grouped grid, scrubber, viewer with info panel) without
+    Google branding.
+[ ] Grid scrolls smoothly through all 2,500 photos.
+[ ] Ask Photos toggle switches modes; Ask returns answer + photos in < 4s
+    and supports follow-ups.
+[ ] Help Me Remember: adaptive questions, soft scoring, removable chips,
+    live counter, checkpoint groups, near-miss jump, success panel.
+[ ] Both demo scenarios in section 11 work end to end.
+[ ] All events logged; /metrics compares the four modes; A/B and Test task
+    modes work.
+[ ] No API keys in the browser bundle; no real people or logos in images.
+[ ] README: setup, keys, data pipeline, demo scripts, credits.
+
+--------------------------------------------------------------------------------
+15. OUT OF SCOPE
+--------------------------------------------------------------------------------
+Videos, real uploads, sharing, multi-user/login, cloud hosting, photo
+editing, direct Google Photos API integration (the Library API no longer
+gives access to a user's full library; the Picker API needs manual
+selection), mood questions, Gmail/Calendar/Maps connections.
+
+--------------------------------------------------------------------------------
+16. BUILD ORDER
+--------------------------------------------------------------------------------
+Phase 0: Data pipeline - scene manifest, procedural mode first (so the
+         app can be built immediately), then AI base images + variants +
+         utility templates = 2,500 low-res photos, thumbnails, seed
+         metadata incl. both demo scenarios.
+Phase 1: App shell + Photos grid + viewer + info panel (Google Photos
+         layout), using seeded metadata only.
+Phase 2: Indexing - Gemini tags, CLIP embeddings, anchors, optional faces.
+         Explore, Albums, Favourites, Documents pages.
+Phase 3: Classic search + struggle detection + Help Me Remember
+         (questions, soft scoring, chips, counter).
+Phase 4: Checkpoint groups, near-miss jump, More like this, success panel.
+Phase 5: Ask Photos toggle + /api/ask pipeline + inline recall chips.
+Phase 6: Event logging, /metrics, A/B mode, Test task mode, README polish.
+================================================================================

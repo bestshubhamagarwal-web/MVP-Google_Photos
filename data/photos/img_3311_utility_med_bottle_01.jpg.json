@@ -1,0 +1,26 @@
+{
+  "title": "img_3311_utility_med_bottle_01.jpg",
+  "description": "Cough syrup medicine bottle on a table",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1572743540,
+    "formatted": "2026-10-03T16:26:08.812Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_3311_utility_med_bottle_01.jpg",
+  "category": "Utility",
+  "target": "target_med_bottle"
+}

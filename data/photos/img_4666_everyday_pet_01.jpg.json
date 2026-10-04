@@ -1,0 +1,26 @@
+{
+  "title": "img_4666_everyday_pet_01.jpg",
+  "description": "Golden retriever sleeping on a rug",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1773719754,
+    "formatted": "2026-10-03T16:26:12.211Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_4666_everyday_pet_01.jpg",
+  "category": "Everyday",
+  "target": null
+}

@@ -1,0 +1,26 @@
+{
+  "title": "img_3321_people_portrait_01.jpg",
+  "description": "Portrait of a friend looking away",
+  "imageViews": 0,
+  "creationTime": {
+    "timestamp": 1677169500,
+    "formatted": "2026-10-03T16:26:08.822Z"
+  },
+  "geoData": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "geoDataExif": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "altitude": 0,
+    "latitudeSpan": 0,
+    "longitudeSpan": 0
+  },
+  "url": "file://img_3321_people_portrait_01.jpg",
+  "category": "People",
+  "target": null
+}
