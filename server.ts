@@ -87,6 +87,10 @@ app.use('/media', express.static(path.join(__dirname, 'data/photos'), {
     }
   }
 }));
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+}
+
+export default app; // Required for Vercel
