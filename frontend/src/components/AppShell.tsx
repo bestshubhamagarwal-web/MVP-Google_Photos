@@ -128,42 +128,18 @@ export const AppShell: React.FC = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={isAskMode ? "Ask Photos anything..." : "Search your photos..."}
+                placeholder="Search your photos..."
                 style={{
                   width: '100%',
                   padding: '10px 100px 10px 45px',
                   borderRadius: '24px',
                   border: '1px solid var(--border-color)',
-                  background: isAskMode ? 'rgba(100, 150, 255, 0.1)' : 'var(--bg-secondary)',
+                  background: 'var(--bg-secondary)',
                   color: 'var(--text-primary)',
                   outline: 'none',
                   fontSize: '16px',
                 }}
               />
-              <button 
-                onClick={toggleAskMode}
-                style={{
-                  position: 'absolute',
-                  right: query || Object.keys(answeredQuestions).length > 0 ? '110px' : '5px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: isAskMode ? 'var(--accent-blue)' : 'var(--bg-active)',
-                  color: isAskMode ? 'white' : 'var(--text-secondary)',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '16px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <Sparkles size={16} />
-                Ask
-              </button>
               {(query || Object.keys(answeredQuestions).length > 0) && (
                 <button 
                   onClick={() => {
