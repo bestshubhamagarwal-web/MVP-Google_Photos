@@ -7,7 +7,9 @@
   --text-secondary: #4a5568;
   --border-color: #e2e8f0;
   --accent-color: #3182ce;
+  --accent-blue: #3182ce;
   --accent-hover: #2b6cb0;
+  --bg-active: #e2e8f0;
   --drawer-width: 250px;
   --topbar-height: 64px;
 }
@@ -19,7 +21,9 @@
   --text-secondary: #e2e8f0;
   --border-color: #4a5568;
   --accent-color: #63b3ed;
+  --accent-blue: #63b3ed;
   --accent-hover: #4299e1;
+  --bg-active: #4a5568;
 }
 
 * {

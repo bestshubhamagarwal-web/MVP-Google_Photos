@@ -119,8 +119,13 @@ export const PhotosPage: React.FC = () => {
       });
   }, []);
 
-  const containerWidth = typeof window !== 'undefined' ? Math.max(window.innerWidth - 250, 300) : 1000; 
-  
+  const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? Math.max(window.innerWidth - 250, 300) : 1000);
+
+  useEffect(() => {
+    const handleResize = () => setContainerWidth(Math.max(window.innerWidth - 250, 300));
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const filteredPhotos = useMemo(() => {
     let result = realPhotos;
     if (query) {

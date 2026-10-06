@@ -257,7 +257,23 @@ export const AppShell: React.FC = () => {
                     <button 
                       key={opt}
                       onClick={() => addAnswer(activeQuestion, opt)}
-                      style={{ background: 'var(--accent-blue)', border: 'none', color: 'white', padding: '6px 16px', borderRadius: '16px', cursor: 'pointer', fontWeight: 500 }}
+                      style={{ 
+                        background: 'var(--text-primary)', 
+                        border: 'none', 
+                        color: 'var(--bg-primary)', 
+                        padding: '10px 18px', 
+                        borderRadius: '24px', 
+                        cursor: 'pointer', 
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                      onMouseOver={e => {
+                        e.currentTarget.style.opacity = '0.8';
+                      }}
+                      onMouseOut={e => {
+                        e.currentTarget.style.opacity = '1';
+                      }}
                     >
                       {opt}
                     </button>
