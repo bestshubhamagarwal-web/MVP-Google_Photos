@@ -17,8 +17,10 @@ interface SearchState {
   setHelpMeRememberActive: (active: boolean) => void;
   activeQuestion: string | null;
   answeredQuestions: Record<string, string>;
+  skippedQuestions: string[];
   addAnswer: (question: string, answer: string) => void;
   removeAnswer: (question: string) => void;
+  skipQuestion: (question: string) => void;
   
   // Adaptive Question Engine
   questionBank: string[];
@@ -99,11 +101,13 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   setHelpMeRememberActive: (active) => set((state) => ({ 
     helpMeRememberActive: active, 
     activeQuestion: INITIAL_QUESTION_BANK[0],
+    skippedQuestions: [],
     ...(active ? { query: '' } : {})
   })),
   
   activeQuestion: null,
   answeredQuestions: {},
+  skippedQuestions: [],
   questionBank: INITIAL_QUESTION_BANK,
   
   addAnswer: (question, answer) => {
@@ -121,10 +125,17 @@ export const useSearchStore = create<SearchState>((set, get) => ({
     });
     get().getNextQuestion();
   },
+
+  skipQuestion: (question) => {
+    set((state) => ({
+      skippedQuestions: [...state.skippedQuestions, question],
+    }));
+    get().getNextQuestion();
+  },
   
   getNextQuestion: () => {
     set((state) => {
-      const remainingQuestions = state.questionBank.filter(q => !state.answeredQuestions[q]);
+      const remainingQuestions = state.questionBank.filter(q => !state.answeredQuestions[q] && !state.skippedQuestions.includes(q));
       // Simple logic: pick the first remaining question (mocking Shannon entropy for MVP)
       return { activeQuestion: remainingQuestions.length > 0 ? remainingQuestions[0] : null };
     });

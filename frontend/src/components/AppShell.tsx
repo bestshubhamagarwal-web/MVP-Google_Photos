@@ -20,7 +20,7 @@ export const AppShell: React.FC = () => {
     isStruggling, 
     helpMeRememberActive, setHelpMeRememberActive, 
     activeQuestion, answeredQuestions, 
-    addAnswer, removeAnswer,
+    addAnswer, removeAnswer, skipQuestion,
     isAskMode, toggleAskMode, askConversation, addAskMessage
   } = useSearchStore();
 
@@ -243,8 +243,16 @@ export const AppShell: React.FC = () => {
 
             {activeQuestion && (
               <div style={{ background: 'var(--bg-primary)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontWeight: 500, marginBottom: '10px', color: 'var(--text-primary)' }}>{activeQuestion}</div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{activeQuestion}</div>
+                  <button
+                    onClick={() => skipQuestion(activeQuestion)}
+                    style={{ background: 'var(--bg-active)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px 16px', borderRadius: '16px', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}
+                  >
+                    Skip this question
+                  </button>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {(QUESTION_OPTIONS[activeQuestion] || []).map(opt => (
                     <button 
                       key={opt}
