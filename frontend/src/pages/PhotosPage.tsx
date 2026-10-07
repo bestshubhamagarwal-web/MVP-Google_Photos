@@ -322,6 +322,9 @@ export const PhotosPage: React.FC = () => {
              <button onClick={() => { useSearchStore.getState().setQuery(selectedPhoto.tags[1] || selectedPhoto.tags[0]); setSelectedPhotoId(null); }} style={{ background: 'transparent', color: 'white', border: '1px solid white', padding: '12px 24px', borderRadius: '24px', cursor: 'pointer', fontSize: '16px' }}>
                More like this
              </button>
+             <button onClick={() => toggleFavourite(selectedPhoto.id)} style={{ background: favouriteIds.includes(selectedPhoto.id) ? 'white' : 'transparent', color: favouriteIds.includes(selectedPhoto.id) ? 'black' : 'white', border: '1px solid white', padding: '12px 24px', borderRadius: '24px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+               {favouriteIds.includes(selectedPhoto.id) ? 'Favourited' : 'Favourite'}
+             </button>
           </div>
         </div>
       )}
